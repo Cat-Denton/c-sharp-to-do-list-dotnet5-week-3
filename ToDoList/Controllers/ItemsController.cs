@@ -30,9 +30,12 @@ namespace ToDoList.Controllers
       return View(userItems);
     }
 
-    public ActionResult Create()
+    public async Task<ActionResult> Create()
     {
-      ViewBag.CategoryId = new SelectList(_db.Categories, "CategoryId", "Name");
+      var userId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var currentUser = await _userManager.FindByIdAsync(userId);
+      var userCategories = _db.Categories.Where(entry => entry.User.Id == currentUser.Id).ToList();
+      ViewBag.CategoryId = new SelectList(userCategories, "CategoryId", "Name");
       return View();
     }
 
@@ -62,10 +65,13 @@ namespace ToDoList.Controllers
       return View(thisItem);
     }
 
-    public ActionResult Edit(int id)
+    public async Task<ActionResult> Edit(int id)
     {
+      var userId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var currentUser = await _userManager.FindByIdAsync(userId);
+      var userCategories = _db.Categories.Where(entry => entry.User.Id == currentUser.Id).ToList();
       var thisItem = _db.Items.FirstOrDefault(item => item.ItemId == id);
-      ViewBag.CategoryId = new SelectList(_db.Categories, "CategoryId", "Name");
+      ViewBag.CategoryId = new SelectList(userCategories, "CategoryId", "Name");
       return View(thisItem);
     }
 
@@ -80,10 +86,13 @@ namespace ToDoList.Controllers
       _db.SaveChanges();
       return RedirectToAction("Index");
     }
-    public ActionResult AddCategory(int id)
+    public async Task<ActionResult> AddCategory(int id)
     {
+      var userId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var currentUser = await _userManager.FindByIdAsync(userId);
+      var userCategories = _db.Categories.Where(entry => entry.User.Id == currentUser.Id).ToList();
       var thisItem = _db.Items.FirstOrDefault(item => item.ItemId == id);
-      ViewBag.CategoryId = new SelectList(_db.Categories, "CategoryId", "Name");
+      ViewBag.CategoryId = new SelectList(userCategories, "CategoryId", "Name");
       return View(thisItem);
     }
     [HttpPost]

@@ -12,7 +12,19 @@
   <ul>
     @foreach (Item item in Model)
     {
-      <li>@Html.ActionLink($"{item.Description}", "Details", new { id = item.ItemId })</li>
+      <li>@Html.ActionLink($"{item.Description}", "Details", new { id = item.ItemId }) | Due Date: @item.DueDate.ToShortDateString();</li>
+      @if (item.IsComplete == true)
+      {
+        <p>✓</p>
+      }
+      else if (item.IsComplete == false)
+      {
+        @using (Html.BeginForm("MarkComplete","Items"))
+        {
+          @Html.Hidden("itemId", @item.ItemId)
+          <input type="submit" value="Complete">
+        }
+      }
     }
   </ul>
 } 

@@ -3,21 +3,31 @@ using Microsoft.AspNetCore.Mvc;
 using ToDoList.Models;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace ToDoList.Controllers
 { 
+  [Authorize]
   public class CategoriesController: Controller
   {
     private readonly ToDoListContext _db;
-    public CategoriesController(ToDoListContext db)
+    private readonly UserManager<ApplicationUser> _userManager;
+    
+    public CategoriesController(UserManager<ApplicationUser> userManager, ToDoListContext db)
     {
+      _userManager = userManager;
       _db = db;
     }
 
-    public ActionResult Index()
+    public async Task<ActionResult> Index()
     {
-      List<Category> model = _db.Categories.ToList();
-      return View(model);
+      var userId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var currentUser = await _userManager.FindByIdAsync(userId);
+      var userCategories = _db.Categories.Where(entry => entry.User.Id == currentUser.Id).ToList();
+      return View(userCategories);
     }
 
     public ActionResult Create()
@@ -26,8 +36,11 @@ namespace ToDoList.Controllers
     }
 
     [HttpPost]
-    public ActionResult Create(Category category)
+    public async Task<ActionResult> Create(Category category)
     {
+      var userId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var currentUser = await _userManager.FindByIdAsync(userId);
+      category.User = currentUser;
       _db.Categories.Add(category);
       _db.SaveChanges();
       return RedirectToAction("Index");
